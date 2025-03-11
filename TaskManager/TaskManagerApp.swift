@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct TaskManagerApp: App {
+    let persistenceController = PersistentController.shared
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.managedObjectContext, persistenceController.context)
         }
     }
 }
