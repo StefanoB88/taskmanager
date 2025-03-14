@@ -11,40 +11,41 @@ struct TaskDetailView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
     
-    var task: TaskEntity
+    @ObservedObject var task: TaskEntity
     
-    @State private var title: String
-    @State private var description: String
-    @State private var selectedPriority: String
-    @State private var dueDate: Date
+    @State private var showDeleteAlert = false
     
     private let priorities = ["Low", "Medium", "High"]
-    
-    init(task: TaskEntity) {
-        self.task = task
-        _title = State(initialValue: task.title ?? "")
-        _description = State(initialValue: task.taskDescription ?? "")
-        _selectedPriority = State(initialValue: task.priority ?? "Low")
-        _dueDate = State(initialValue: task.dueDate ?? Date())
-    }
     
     var body: some View {
         Form {
             Section(header: Text("Task Details")) {
-                TextField("Title", text: $title)
-                    .padding()
+                TextField("Title", text: Binding(
+                    get: { task.title ?? "" },
+                    set: { task.title = $0 }
+                ))
+                .padding()
                 
-                TextField("Description", text: $description)
-                    .padding()
+                TextField("Description", text: Binding(
+                    get: { task.taskDescription ?? "" },
+                    set: { task.taskDescription = $0 }
+                ))
+                .padding()
                 
-                Picker("Priority", selection: $selectedPriority) {
+                Picker("Priority", selection: Binding(
+                    get: { task.priority ?? "Low" },
+                    set: { task.priority = $0 }
+                )) {
                     ForEach(priorities, id: \.self) { priority in
                         Text(priority)
                     }
                 }
                 .pickerStyle(SegmentedPickerStyle())
                 
-                DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                DatePicker("Due Date", selection: Binding(
+                    get: { task.dueDate ?? Date() },
+                    set: { task.dueDate = $0 }
+                ), displayedComponents: .date)
             }
             
             Section {
@@ -53,9 +54,17 @@ struct TaskDetailView: View {
                 }
                 
                 Button(role: .destructive) {
-                    deleteTask()
+                    showDeleteAlert = true
                 } label: {
                     Text("Delete Task")
+                }
+                .alert("Delete Task", isPresented: $showDeleteAlert) {
+                    Button("Yes", role: .destructive) {
+                        deleteTask()
+                    }
+                    Button("Cancel", role: .cancel) { }
+                } message: {
+                    Text("Are you sure you want to eliminate this task?")
                 }
             }
         }
@@ -66,11 +75,6 @@ struct TaskDetailView: View {
     }
     
     private func saveChanges() {
-        task.title = title
-        task.taskDescription = description
-        task.priority = selectedPriority
-        task.dueDate = dueDate
-        
         do {
             try viewContext.save()
             dismiss()
@@ -82,8 +86,12 @@ struct TaskDetailView: View {
     private func deleteTask() {
         withAnimation {
             viewContext.delete(task)
-            try? viewContext.save()
-            dismiss()
+            do {
+                try viewContext.save()
+                dismiss()
+            } catch {
+                print("Error deleting task: \(error.localizedDescription)")
+            }
         }
     }
 }

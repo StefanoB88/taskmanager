@@ -9,6 +9,12 @@ import SwiftUI
 import CoreData
 
 struct ContentView: View {
+    @AppStorage("accentColor") private var accentColorHex: String = "#0000FF" // Default iOS Blue
+    
+    var accentColor: Color {
+        return Color.fromHex(accentColorHex)
+    }
+    
     @Environment(\.managedObjectContext) private var viewContext
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \TaskEntity.dueDate, ascending: true)],
@@ -43,15 +49,9 @@ struct ContentView: View {
                 List {
                     ForEach(filteredTasks, id: \.self) { task in
                         NavigationLink(destination: TaskDetailView(task: task)) {
-                            TaskRow(task: Binding(
-                                get: { task },
-                                set: { newTask in
-                                    task = newTask
-                                    try? viewContext.save()
-                                }))
+                            TaskRow(task: task)
                         }
                     }
-                    .onDelete(perform: deleteTask)
                 }
                 .listStyle(PlainListStyle())
                 
@@ -59,7 +59,7 @@ struct ContentView: View {
                     Label("Add Task", systemImage: "plus")
                         .font(.title2)
                         .padding()
-                        .background(Color.blue)
+                        .background(accentColor)
                         .foregroundColor(.white)
                         .clipShape(Capsule())
                         .shadow(radius: 5)
@@ -71,7 +71,17 @@ struct ContentView: View {
                 }
             }
             .navigationTitle("Task Manager")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: SettingsView()) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.title2)
+                            .foregroundColor(accentColor)
+                    }
+                }
+            }
         }
+        .accentColor(accentColor)
     }
     
     private func deleteTask(offsets: IndexSet) {

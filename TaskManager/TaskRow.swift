@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TaskRow: View {
-    @Binding var task: TaskEntity
+    @ObservedObject var task: TaskEntity
     @Environment(\.managedObjectContext) private var viewContext
     
     var body: some View {
