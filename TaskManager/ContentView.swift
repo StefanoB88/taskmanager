@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  EasyTask
+//  TaskManager
 //
 //  Created by Stefano on 11.03.25.
 //
