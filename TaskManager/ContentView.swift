@@ -16,6 +16,7 @@ struct ContentView: View {
     @State private var sortBy: SortOption = .priority
     @State private var showSortOptions = false
     @State private var sortDirection: Bool = true // true = ascending, false = descending
+    @State private var isReorderingManually = false
     
     // AccentColor
     @AppStorage("accentColor") private var accentColorHex: String = "#0000FF" // Default iOS Blue
@@ -96,17 +97,15 @@ struct ContentView: View {
                         .listRowSeparator(.hidden)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
                     } else {
-                        LazyVStack {
-                            ForEach(filteredTasks.sorted(by: sortTasks), id: \.self) { task in
-                                TaskRow(task: task, updateTaskCounts: updateTaskCounts)
-                                    .onTapGesture {
-                                        withAnimation(.spring(response: 0.5, dampingFraction: 0.7, blendDuration: 0)) {
-                                            selectedTask = task
-                                        }
+                        ForEach(filteredTasks.sorted(by: sortTasks), id: \.self) { task in
+                            TaskRow(task: task, updateTaskCounts: updateTaskCounts)
+                                .onTapGesture {
+                                    withAnimation(.spring(response: 0.5, dampingFraction: 0.7, blendDuration: 0)) {
+                                        selectedTask = task
                                     }
-                            }
-                            .onMove(perform: moveTask)
+                                }
                         }
+                        .onMove(perform: moveTask)
                     }
                 }
                 .sheet(item: $selectedTask) { task in
@@ -133,6 +132,7 @@ struct ContentView: View {
                         .clipShape(Capsule())
                         .shadow(radius: 5)
                 }
+                .accessibilityIdentifier("addTaskButton")
                 .accessibilityLabel("Add a new task")
                 .accessibilityHint("Opens a form to create a new task")
                 .padding()
@@ -157,6 +157,7 @@ struct ContentView: View {
                                 .font(.title2)
                                 .foregroundColor(accentColor)
                         }
+                        .accessibilityIdentifier("sortTaskButton")
                         .accessibilityLabel("Sort Tasks")
                         .accessibilityHint("Tap to change the sorting order of tasks")
                         
@@ -172,19 +173,28 @@ struct ContentView: View {
                 ActionSheet(
                     title: Text("Sort Tasks"),
                     buttons: [
-                        .default(Text("Priority")) {
-                            sortBy = .priority
-                            sortDirection.toggle()
-                        },
-                        .default(Text("Due Date")) {
-                            sortBy = .dueDate
-                            sortDirection.toggle()
-                        },
-                        .default(Text("Alphabetically")) {
-                            sortBy = .alphabetical
-                            sortDirection.toggle()
-                        },
-                        .cancel()
+                        .default(Text("Priority")
+                            .accessibilityLabel("Sort by Priority")) {
+                                sortBy = .priority
+                                sortDirection.toggle()
+                                isReorderingManually = false
+                            },
+                        
+                            .default(Text("Due Date")
+                                .accessibilityLabel("Sort by Due Date")) {
+                                    sortBy = .dueDate
+                                    sortDirection.toggle()
+                                    isReorderingManually = false
+                                },
+                        
+                            .default(Text("Alphabetically")
+                                .accessibilityLabel("Sort Alphabetically")) {
+                                    sortBy = .alphabetical
+                                    sortDirection.toggle()
+                                    isReorderingManually = false
+                                },
+                        
+                            .cancel()
                     ]
                 )
             }
@@ -198,6 +208,8 @@ struct ContentView: View {
     }
     
     private func moveTask(from source: IndexSet, to destination: Int) {
+        isReorderingManually = true
+        
         var tasksArray = filteredTasks
         tasksArray.move(fromOffsets: source, toOffset: destination)
         
@@ -209,6 +221,10 @@ struct ContentView: View {
     }
     
     private func sortTasks(lhs: TaskEntity, rhs: TaskEntity) -> Bool {
+        if isReorderingManually {
+            return lhs.order < rhs.order
+        }
+        
         switch sortBy {
         case .priority:
             let lhsPriority = priorityStringToNumber(lhs.priority)

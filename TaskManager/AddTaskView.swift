@@ -28,6 +28,7 @@ struct AddTaskView: View {
                         .padding()
                         .textInputAutocapitalization(.sentences)
                         .disableAutocorrection(true)
+                        .accessibilityIdentifier("addTaskTitle")
                         .accessibilityLabel("Task Title")
                         .accessibilityHint("Enter a title for the task")
                     
@@ -35,6 +36,7 @@ struct AddTaskView: View {
                         .padding()
                         .textInputAutocapitalization(.sentences)
                         .disableAutocorrection(true)
+                        .accessibilityIdentifier("addTaskDescription")
                         .accessibilityLabel("Task Description")
                         .accessibilityHint("Enter a brief description of the task")
                     
@@ -44,6 +46,7 @@ struct AddTaskView: View {
                         }
                     }
                     .pickerStyle(SegmentedPickerStyle())
+                    .accessibilityIdentifier("addTaskPriority")
                     .accessibilityLabel("Task Priority")
                     .accessibilityHint("Select the priority level for the task")
                     
@@ -57,6 +60,7 @@ struct AddTaskView: View {
                         addTask()
                     }
                     .disabled(title.isEmpty)
+                    .accessibilityIdentifier("saveTaskButton")
                     .accessibilityLabel("Save Task")
                     .accessibilityHint("Saves the task and returns to the previous screen")
                 }

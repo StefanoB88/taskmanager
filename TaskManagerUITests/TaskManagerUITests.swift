@@ -10,34 +10,83 @@ import XCTest
 final class TaskManagerUITests: XCTestCase {
 
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
     }
 
-    override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
-    }
+    override func tearDownWithError() throws {}
 
     @MainActor
     func testExample() throws {
-        // UI tests must launch the application that they test.
         let app = XCUIApplication()
         app.launch()
-
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
     }
 
     @MainActor
     func testLaunchPerformance() throws {
         if #available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 7.0, *) {
-            // This measures how long it takes to launch your application.
             measure(metrics: [XCTApplicationLaunchMetric()]) {
                 XCUIApplication().launch()
             }
         }
+    }
+    
+    @MainActor
+    func testAddTask() throws {
+        let app = XCUIApplication()
+        app.launch()
+        
+        sleep(15)
+        
+        createTask(app: app, title: "New Test Task", description: "This is a test task description.")
+
+        let taskCell = app.staticTexts["New Test Task"]
+        XCTAssertTrue(taskCell.waitForExistence(timeout: 5), "The task should appear in the task list")
+    }
+    
+    @MainActor
+    func testSort() throws {
+        let app = XCUIApplication()
+        app.launch()
+        
+        sleep(15)
+        // Creazione di task con titoli variabili
+        let taskTitles = ["Zebra Task", "Apple Task", "Middle Task"]
+        for title in taskTitles {
+            createTask(app: app, title: title)
+        }
+        
+        let sortButton = app.buttons["sortTaskButton"]
+        XCTAssertTrue(sortButton.waitForExistence(timeout: 5), "Sort Task button should exist")
+        sortButton.tap()
+        
+        let sortAlphabeticallyButton = app.sheets.firstMatch.buttons["Alphabetically"]
+        XCTAssertTrue(sortAlphabeticallyButton.waitForExistence(timeout: 5), "The button to sort alphabetically should exist")
+        sortAlphabeticallyButton.tap()
+        
+        let taskCells = app.tables.cells.allElementsBoundByIndex.compactMap { $0.staticTexts.firstMatch.label }
+
+        XCTAssertEqual(taskCells, taskCells.sorted(), "Tasks should be sorted alphabetically")
+    }
+    
+    private func createTask(app: XCUIApplication, title: String, description: String = "") {
+        let addTaskButton = app.buttons["addTaskButton"]
+        XCTAssertTrue(addTaskButton.waitForExistence(timeout: 5), "Add Task button should exist")
+        addTaskButton.tap()
+        
+        let titleTextField = app.textFields["addTaskTitle"]
+        XCTAssertTrue(titleTextField.waitForExistence(timeout: 5), "Title text field should exist")
+        titleTextField.tap()
+        titleTextField.typeText(title)
+        
+        if !description.isEmpty {
+            let descriptionTextField = app.textFields["addTaskDescription"]
+            XCTAssertTrue(descriptionTextField.waitForExistence(timeout: 5), "Description text field should exist")
+            descriptionTextField.tap()
+            descriptionTextField.typeText(description)
+        }
+        
+        let saveButton = app.buttons["saveTaskButton"]
+        XCTAssertTrue(saveButton.waitForExistence(timeout: 5), "Save Task button should exist")
+        saveButton.tap()
     }
 }
