@@ -1,6 +1,6 @@
-EasyTask - Task Manager
+Task Manager
 
-EasyTask is a simple task manager app built with SwiftUI and CoreData. It allows users to create, view, filter, and sort tasks. It also supports manual task reordering and provides a visual progress indicator.
+TaskManager is a simple task manager app built with SwiftUI and CoreData. It allows users to create, view, filter, and sort tasks. It also supports manual task reordering and provides a visual progress indicator.
 
 Features
 	•	Task Creation: Easily add new tasks with titles, descriptions, and priorities.
@@ -28,12 +28,12 @@ How to Use
 Installation
 	1.	Clone this repository to your local machine:
 
-git clone https://github.com/yourusername/EasyTask.git
+git clone https://github.com/StefanoB88/taskmanager.git
 
 
 	2.	Open the project in Xcode:
 
-open EasyTask.xcodeproj
+open TaskManager.xcodeproj
 
 
 	3.	Build and run the app on your simulator or device.
