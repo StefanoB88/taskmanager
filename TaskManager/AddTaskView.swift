@@ -11,6 +11,7 @@ import CoreData
 struct AddTaskView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.dismiss) private var dismiss
+    var updateTaskCounts: () -> Void
     
     @State private var title: String = ""
     @State private var description: String = ""
@@ -27,11 +28,15 @@ struct AddTaskView: View {
                         .padding()
                         .textInputAutocapitalization(.sentences)
                         .disableAutocorrection(true)
+                        .accessibilityLabel("Task Title")
+                        .accessibilityHint("Enter a title for the task")
                     
                     TextField("Description", text: $description)
                         .padding()
                         .textInputAutocapitalization(.sentences)
                         .disableAutocorrection(true)
+                        .accessibilityLabel("Task Description")
+                        .accessibilityHint("Enter a brief description of the task")
                     
                     Picker("Priority", selection: $selectedPriority) {
                         ForEach(priorities, id: \.self) { priority in
@@ -39,8 +44,12 @@ struct AddTaskView: View {
                         }
                     }
                     .pickerStyle(SegmentedPickerStyle())
+                    .accessibilityLabel("Task Priority")
+                    .accessibilityHint("Select the priority level for the task")
                     
                     DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                        .accessibilityLabel("Task Due Date")
+                        .accessibilityHint("Select a due date for the task")
                 }
                 
                 Section {
@@ -48,12 +57,16 @@ struct AddTaskView: View {
                         addTask()
                     }
                     .disabled(title.isEmpty)
+                    .accessibilityLabel("Save Task")
+                    .accessibilityHint("Saves the task and returns to the previous screen")
                 }
             }
             .navigationTitle("Add Task")
             .navigationBarItems(trailing: Button("Cancel") {
                 dismiss()
-            })
+            }
+            .accessibilityLabel("Cancel")
+            .accessibilityHint("Dismisses the add task screen without saving"))
         }
     }
     
@@ -71,5 +84,7 @@ struct AddTaskView: View {
         } catch {
             print("Error saving task: \(error.localizedDescription)")
         }
+        
+        updateTaskCounts()
     }
 }

@@ -10,6 +10,10 @@ import SwiftUI
 struct TaskRow: View {
     @ObservedObject var task: TaskEntity
     @Environment(\.managedObjectContext) private var viewContext
+    var updateTaskCounts: () -> Void
+    
+    @State private var showAlert = false
+    @State private var taskToDelete: TaskEntity?
     
     var body: some View {
         HStack {
@@ -17,17 +21,24 @@ struct TaskRow: View {
                 Text(task.title ?? "Untitled")
                     .font(.headline)
                     .lineLimit(1)
+                    .accessibilityLabel(task.title ?? "Untitled Task")
+                    .accessibilityHint("The title of the task")
                 
                 if let description = task.taskDescription, !description.isEmpty {
                     Text(description)
                         .font(.subheadline)
                         .foregroundColor(.gray)
                         .lineLimit(1)
+                        .accessibilityLabel("Description: \(description)")
+                        .accessibilityHint("The description of the task")
                 }
                 
                 Text("Due: \(formattedDate(task.dueDate))")
                     .font(.caption)
                     .foregroundColor(.gray)
+                    .accessibilityLabel("Due date")
+                    .accessibilityValue(formattedDate(task.dueDate))
+                    .accessibilityHint("The due date for the task")
             }
             
             Spacer()
@@ -38,10 +49,19 @@ struct TaskRow: View {
                 .background(priorityColor(task.priority ?? "Low"))
                 .foregroundColor(.white)
                 .cornerRadius(8)
+                .accessibilityLabel("Priority: \(task.priority ?? "Low")")
+                .accessibilityHint("The priority of the task")
             
             if task.isCompleted {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundColor(.green)
+                    .accessibilityLabel("Task completed")
+                    .accessibilityHint("This task has been marked as completed")
+            } else {
+                Image(systemName: "circle")
+                    .foregroundColor(.gray)
+                    .accessibilityLabel("Task not completed")
+                    .accessibilityHint("This task is not completed yet")
             }
         }
         .padding()
@@ -49,10 +69,13 @@ struct TaskRow: View {
         .cornerRadius(10)
         .swipeActions {
             Button(role: .destructive) {
-                deleteTask()
+                taskToDelete = task
+                showAlert = true
             } label: {
                 Label("Delete", systemImage: "trash")
             }
+            .accessibilityLabel("Delete Task")
+            .accessibilityHint("Delete this task permanently")
             
             Button {
                 toggleCompletion()
@@ -60,6 +83,18 @@ struct TaskRow: View {
                 Label(task.isCompleted ? "Mark as Pending" : "Mark as Completed", systemImage: task.isCompleted ? "arrow.uturn.backward" : "checkmark.circle")
             }
             .tint(task.isCompleted ? .yellow : .green)
+            .accessibilityLabel(task.isCompleted ? "Mark as Pending" : "Mark as Completed")
+            .accessibilityHint("Tap to change the task completion status")
+        }
+        .alert(isPresented: $showAlert) {
+            Alert(
+                title: Text("Delete Task"),
+                message: Text("Are you sure you want to delete this task?"),
+                primaryButton: .destructive(Text("Delete")) {
+                    deleteTask()
+                },
+                secondaryButton: .cancel()
+            )
         }
     }
     
@@ -81,14 +116,19 @@ struct TaskRow: View {
     }
     
     private func deleteTask() {
+        guard let taskToDelete = taskToDelete else { return }
+        
         withAnimation {
-            viewContext.delete(task)
+            viewContext.delete(taskToDelete)
             try? viewContext.save()
         }
+        
+        updateTaskCounts()
     }
     
     private func toggleCompletion() {
         task.isCompleted.toggle()
         try? viewContext.save()
+        updateTaskCounts()
     }
 }

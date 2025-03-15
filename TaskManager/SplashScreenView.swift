@@ -27,7 +27,7 @@ struct SplashScreenView: View {
                     .opacity(logoOpacity)
                     .symbolEffect(.rotate, isActive: animateGear)
                 
-                Text("TaskManager")
+                Text("Task Manager")
                     .font(.largeTitle)
                     .bold()
                     .opacity(logoOpacity)
